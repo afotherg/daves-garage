@@ -50,6 +50,20 @@ const orangePlastic = defineMaterial({
   acoustic: { baseFrequency: 620, decay: 0.12, noise: 0.18 },
 });
 
+const bluePlastic = defineMaterial({
+  color: '#2563eb',
+  roughness: 0.8,
+  metalness: 0.05,
+  acoustic: { baseFrequency: 600, decay: 0.12, noise: 0.18 },
+});
+
+const yellowPlastic = defineMaterial({
+  color: '#facc15',
+  roughness: 0.82,
+  metalness: 0.04,
+  acoustic: { baseFrequency: 610, decay: 0.12, noise: 0.18 },
+});
+
 const cardboard = defineMaterial({
   color: '#a16207',
   roughness: 0.94,
@@ -69,6 +83,13 @@ const glass = defineMaterial({
   roughness: 0.08,
   metalness: 0.02,
   acoustic: { baseFrequency: 880, decay: 0.09, noise: 0.03 },
+});
+
+const rubber = defineMaterial({
+  color: '#171717',
+  roughness: 0.96,
+  metalness: 0.01,
+  acoustic: { baseFrequency: 250, decay: 0.13, noise: 0.3 },
 });
 
 function box(size, position, material) {
@@ -222,6 +243,110 @@ function buildBoxesVisual() {
   return group;
 }
 
+function buildWorkbenchVisual() {
+  const group = new THREE.Group();
+  const topMaterial = makeStandardMaterial(wood);
+  const frameMaterial = makeStandardMaterial(darkSteel);
+  const viseMaterial = makeStandardMaterial(steel);
+
+  addMesh(group, new THREE.BoxGeometry(1.62, 0.12, 0.72), topMaterial, [0, 0.84, 0]);
+  addMesh(group, new THREE.BoxGeometry(1.5, 0.09, 0.62), topMaterial, [0, 0.42, 0.01]);
+  for (const x of [-0.68, 0.68]) {
+    for (const z of [-0.26, 0.26]) {
+      addMesh(group, new THREE.BoxGeometry(0.08, 0.82, 0.08), frameMaterial, [x, 0.43, z]);
+    }
+  }
+  addMesh(group, new THREE.BoxGeometry(0.28, 0.16, 0.18), viseMaterial, [-0.54, 0.98, -0.18]);
+  addMesh(group, new THREE.BoxGeometry(0.16, 0.08, 0.26), viseMaterial, [-0.72, 0.97, -0.18]);
+  addMesh(group, new THREE.CylinderGeometry(0.026, 0.026, 0.46, 16), viseMaterial, [-0.62, 0.97, -0.18], [0, Math.PI / 2, 0]);
+  addMesh(group, new THREE.BoxGeometry(0.48, 0.05, 0.08), makeStandardMaterial(redEnamel), [0.33, 0.935, -0.16], [0, -0.24, 0]);
+  addMesh(group, new THREE.CylinderGeometry(0.035, 0.035, 0.36, 16), makeStandardMaterial(steel), [0.2, 0.95, 0.17], [0, 0, Math.PI / 2]);
+  addMesh(group, new THREE.BoxGeometry(0.44, 0.035, 0.065), makeStandardMaterial(orangePlastic), [0.43, 0.95, 0.18], [0, 0.12, 0]);
+  return group;
+}
+
+function buildBikeVisual() {
+  const group = new THREE.Group();
+  const tireMaterial = makeStandardMaterial(rubber);
+  const frameMaterial = makeStandardMaterial(redEnamel);
+  const metalMaterial = makeStandardMaterial(steel);
+
+  for (const x of [-0.58, 0.58]) {
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.035, 12, 28), tireMaterial);
+    tire.position.set(x, 0.36, 0);
+    tire.rotation.y = Math.PI / 2;
+    tire.castShadow = true;
+    tire.receiveShadow = true;
+    group.add(tire);
+    addMesh(group, new THREE.CylinderGeometry(0.018, 0.018, 0.05, 16), metalMaterial, [x, 0.36, 0], [0, 0, Math.PI / 2]);
+  }
+
+  addMesh(group, new THREE.CylinderGeometry(0.026, 0.026, 0.88, 14), frameMaterial, [0, 0.64, 0], [0, 0, Math.PI / 2]);
+  addMesh(group, new THREE.CylinderGeometry(0.026, 0.026, 0.78, 14), frameMaterial, [-0.28, 0.62, 0], [0, 0, -0.78]);
+  addMesh(group, new THREE.CylinderGeometry(0.026, 0.026, 0.78, 14), frameMaterial, [0.28, 0.62, 0], [0, 0, 0.78]);
+  addMesh(group, new THREE.CylinderGeometry(0.026, 0.026, 0.62, 14), frameMaterial, [0, 0.79, 0], [0, 0, 0.18]);
+  addMesh(group, new THREE.BoxGeometry(0.34, 0.06, 0.18), makeStandardMaterial(blackPlastic), [-0.05, 1.04, 0]);
+  addMesh(group, new THREE.CylinderGeometry(0.018, 0.018, 0.52, 14), metalMaterial, [0.56, 0.88, 0], [0, 0, 0.62]);
+  addMesh(group, new THREE.CylinderGeometry(0.018, 0.018, 0.46, 14), metalMaterial, [0.72, 1.08, 0], [0, 0, Math.PI / 2]);
+  return group;
+}
+
+function buildToolboxVisual() {
+  const group = new THREE.Group();
+  const bodyMaterial = makeStandardMaterial(redEnamel);
+  const trimMaterial = makeStandardMaterial(steel);
+
+  addMesh(group, new THREE.BoxGeometry(0.52, 0.24, 0.28), bodyMaterial, [0, 0.12, 0]);
+  addMesh(group, new THREE.BoxGeometry(0.54, 0.03, 0.3), trimMaterial, [0, 0.245, 0]);
+  addMesh(group, new THREE.CylinderGeometry(0.022, 0.022, 0.38, 16), trimMaterial, [0, 0.38, 0], [0, 0, Math.PI / 2]);
+  addMesh(group, new THREE.BoxGeometry(0.22, 0.045, 0.045), trimMaterial, [0, 0.26, 0.16]);
+  return group;
+}
+
+function buildWrenchVisual() {
+  const group = new THREE.Group();
+  const metalMaterial = makeStandardMaterial(steel);
+
+  addMesh(group, new THREE.BoxGeometry(0.52, 0.04, 0.055), metalMaterial, [0, 0.04, 0]);
+  addMesh(group, new THREE.TorusGeometry(0.08, 0.018, 12, 24, Math.PI * 1.55), metalMaterial, [-0.29, 0.04, 0], [Math.PI / 2, 0, 0.22]);
+  addMesh(group, new THREE.TorusGeometry(0.06, 0.016, 12, 24, Math.PI * 1.55), metalMaterial, [0.29, 0.04, 0], [Math.PI / 2, 0, -0.22]);
+  return group;
+}
+
+function buildTireStackVisual() {
+  const group = new THREE.Group();
+  const tireMaterial = makeStandardMaterial(rubber);
+  const rimMaterial = makeStandardMaterial(steel);
+
+  for (const y of [0.14, 0.36, 0.58]) {
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.085, 18, 34), tireMaterial);
+    tire.position.set(0, y, 0);
+    tire.rotation.x = Math.PI / 2;
+    tire.castShadow = true;
+    tire.receiveShadow = true;
+    group.add(tire);
+
+    addMesh(group, new THREE.CylinderGeometry(0.13, 0.13, 0.045, 20), rimMaterial, [0, y, 0], [Math.PI / 2, 0, 0]);
+  }
+  return group;
+}
+
+function buildPaintCansVisual() {
+  const group = new THREE.Group();
+  const lidMaterial = makeStandardMaterial(steel);
+  const colors = [bluePlastic, yellowPlastic, redEnamel];
+  const positions = [-0.26, 0, 0.26];
+
+  positions.forEach((x, index) => {
+    addMesh(group, new THREE.CylinderGeometry(0.1, 0.1, 0.28, 24), makeStandardMaterial(colors[index]), [x, 0.14, 0]);
+    addMesh(group, new THREE.CylinderGeometry(0.104, 0.104, 0.018, 24), lidMaterial, [x, 0.29, 0]);
+    addMesh(group, new THREE.CylinderGeometry(0.072, 0.072, 0.006, 24), makeStandardMaterial(enamel), [x, 0.302, 0]);
+  });
+
+  addMesh(group, new THREE.BoxGeometry(0.68, 0.035, 0.26), makeStandardMaterial(wood), [0, 0.02, 0]);
+  return group;
+}
+
 export const garageDimensions = {
   width: 6.6,
   depth: 7.4,
@@ -233,6 +358,7 @@ export const cameraViews = [
   { id: 'corner', label: 'Corner Sweep', position: [-6.1, 3.2, 4.8], target: [0.3, 1.2, -1.2] },
   { id: 'overhead', label: 'Overhead', position: [0, 8.8, 0.1], target: [0, 0.8, 0] },
   { id: 'service', label: 'Service Line', position: [2.4, 1.4, 2.2], target: [-0.6, 1.0, -1.5] },
+  { id: 'ball', label: 'Ball Cam', position: [0, 1.2, 2.8], target: [0, 1.15, 1.8], dynamic: true },
 ];
 
 export const objectCatalog = [
@@ -363,6 +489,119 @@ export const objectCatalog = [
       box([0.46, 0.28, 0.4], [0.04, 0.56, 0.02], cardboard),
     ],
     buildVisual: buildBoxesVisual,
+  },
+  {
+    id: 'workbench',
+    label: 'Workbench',
+    mass: 62,
+    material: wood,
+    asset: {
+      url: '/models/workbench.glb',
+      rotation: [0, Math.PI * 0.5, 0],
+      scaleMultiplier: 1.16,
+      offset: [0, 0, 0],
+    },
+    initialPosition: [1.55, 0.45, -3.12],
+    initialRotation: [0, Math.PI * -0.02, 0],
+    buildCollisionParts: () => [
+      box([1.64, 0.12, 0.72], [0, 0.84, 0], wood),
+      box([1.52, 0.09, 0.62], [0, 0.42, 0.01], wood),
+      box([0.08, 0.84, 0.08], [-0.68, 0.42, -0.26], steel),
+      box([0.08, 0.84, 0.08], [0.68, 0.42, -0.26], steel),
+      box([0.08, 0.84, 0.08], [-0.68, 0.42, 0.26], steel),
+      box([0.08, 0.84, 0.08], [0.68, 0.42, 0.26], steel),
+      box([0.3, 0.16, 0.22], [-0.54, 0.98, -0.18], steel),
+    ],
+    buildVisual: buildWorkbenchVisual,
+  },
+  {
+    id: 'bike',
+    label: 'Bicycle',
+    mass: 13,
+    material: steel,
+    asset: {
+      url: '/models/bicycle.glb',
+      rotation: [0, 0, 0],
+      scaleMultiplier: 1.15,
+      offset: [0, 0, 0],
+    },
+    initialPosition: [-2.92, 0.62, -0.55],
+    initialRotation: [0, Math.PI * 0.5, Math.PI * -0.06],
+    buildCollisionParts: () => [
+      cylinder(0.32, 0.32, 0.08, [-0.58, 0.36, 0], rubber, 28),
+      cylinder(0.32, 0.32, 0.08, [0.58, 0.36, 0], rubber, 28),
+      box([1.28, 0.08, 0.08], [0, 0.64, 0], steel),
+      box([0.08, 0.76, 0.08], [-0.28, 0.68, 0], steel),
+      box([0.08, 0.76, 0.08], [0.28, 0.68, 0], steel),
+      box([0.5, 0.08, 0.22], [0.58, 1.04, 0], steel),
+    ],
+    buildVisual: buildBikeVisual,
+  },
+  {
+    id: 'toolbox',
+    label: 'Toolbox',
+    mass: 9,
+    material: steel,
+    asset: {
+      url: '/models/toolbox.glb',
+      rotation: [0, 0, 0],
+      scaleMultiplier: 1.2,
+      offset: [0, 0, 0],
+    },
+    initialPosition: [1.32, 1.0, -3.0],
+    initialRotation: [0, Math.PI * 0.04, 0],
+    buildCollisionParts: () => [
+      box([0.54, 0.3, 0.32], [0, 0.15, 0], steel),
+      box([0.4, 0.08, 0.08], [0, 0.36, 0], steel),
+    ],
+    buildVisual: buildToolboxVisual,
+  },
+  {
+    id: 'wrench',
+    label: 'Workbench Wrench',
+    mass: 1.2,
+    material: steel,
+    asset: {
+      url: '/models/wrench.glb',
+      rotation: [0, 0, Math.PI * 0.5],
+      scaleMultiplier: 1.22,
+      offset: [0, 0, 0],
+    },
+    initialPosition: [1.86, 0.94, -2.9],
+    initialRotation: [0, Math.PI * -0.15, 0],
+    buildCollisionParts: () => [
+      box([0.6, 0.05, 0.08], [0, 0.035, 0], steel),
+    ],
+    buildVisual: buildWrenchVisual,
+  },
+  {
+    id: 'tire-stack',
+    label: 'Tire Stack',
+    mass: 24,
+    material: rubber,
+    initialPosition: [2.38, 0.36, 2.25],
+    initialRotation: [0, Math.PI * 0.08, 0],
+    buildCollisionParts: () => [
+      cylinder(0.38, 0.38, 0.2, [0, 0.14, 0], rubber, 28),
+      cylinder(0.38, 0.38, 0.2, [0, 0.36, 0], rubber, 28),
+      cylinder(0.38, 0.38, 0.2, [0, 0.58, 0], rubber, 28),
+    ],
+    buildVisual: buildTireStackVisual,
+  },
+  {
+    id: 'paint-cans',
+    label: 'Paint Cans',
+    mass: 11,
+    material: steel,
+    initialPosition: [-2.35, 0.35, 2.45],
+    initialRotation: [0, Math.PI * -0.12, 0],
+    buildCollisionParts: () => [
+      box([0.7, 0.04, 0.28], [0, 0.02, 0], wood),
+      cylinder(0.1, 0.1, 0.28, [-0.26, 0.14, 0], steel, 24),
+      cylinder(0.1, 0.1, 0.28, [0, 0.14, 0], steel, 24),
+      cylinder(0.1, 0.1, 0.28, [0.26, 0.14, 0], steel, 24),
+    ],
+    buildVisual: buildPaintCansVisual,
   },
 ];
 

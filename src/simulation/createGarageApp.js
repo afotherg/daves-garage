@@ -41,6 +41,10 @@ export function createGarageApp(elements) {
   ballMesh.receiveShadow = true;
   sceneSystem.scene.add(ballMesh);
 
+  const ballCameraPosition = new THREE.Vector3();
+  const ballCameraDirection = new THREE.Vector3(0.1, 0.12, -1).normalize();
+  const ballCameraLookTarget = new THREE.Vector3();
+
   const maxTrailPoints = 140;
   const trailPositions = new Float32Array(maxTrailPoints * 3);
   const trailGeometry = new THREE.BufferGeometry();
@@ -80,11 +84,14 @@ export function createGarageApp(elements) {
 
   const state = {
     selectedObject: null,
+    cameraMode: 'orbit',
     launchSpeed: 8.8,
     launchElevation: 0.12,
     launchSidespin: 2.8,
     playback: 'Idle',
   };
+
+  ballCameraDirection.set(0.1, state.launchElevation, -1).normalize();
 
   const gui = new GUI({ title: 'Simulation Tuning' });
   gui.add(state, 'launchSpeed', 4, 16, 0.1).name('Serve speed (m/s)');
@@ -322,6 +329,37 @@ export function createGarageApp(elements) {
     return button;
   }
 
+  function setCameraView(view) {
+    if (view.dynamic && view.id === 'ball') {
+      state.cameraMode = 'ball';
+      sceneSystem.orbit.enabled = false;
+      ballMesh.visible = false;
+      updateBallCamera();
+      return;
+    }
+
+    state.cameraMode = 'orbit';
+    ballMesh.visible = true;
+    sceneSystem.setView(view.id);
+  }
+
+  function updateBallCamera() {
+    const velocity = ball.body.velocity;
+    const speed = velocity.length();
+
+    if (speed > 0.08) {
+      ballCameraDirection.set(velocity.x, velocity.y, velocity.z).normalize();
+    }
+
+    ballCameraPosition.set(ball.body.position.x, ball.body.position.y, ball.body.position.z);
+    ballCameraPosition.addScaledVector(ballCameraDirection, ball.radius * 1.35);
+
+    ballCameraLookTarget.copy(ballCameraPosition).addScaledVector(ballCameraDirection, 1.4);
+    sceneSystem.camera.position.copy(ballCameraPosition);
+    sceneSystem.camera.lookAt(ballCameraLookTarget);
+    sceneSystem.orbit.target.copy(ballCameraLookTarget);
+  }
+
   for (const config of objectCatalog) {
     elements.objectButtons.appendChild(
       createButton(`Add ${config.label}`, () => {
@@ -334,13 +372,14 @@ export function createGarageApp(elements) {
   for (const view of cameraViews) {
     elements.viewButtons.appendChild(
       createButton(view.label, () => {
-        sceneSystem.setView(view.id);
+        setCameraView(view);
       }),
     );
   }
 
   elements.launchButton.addEventListener('click', () => {
     const launchVector = new CANNON.Vec3(0.1, state.launchElevation, -1).unit();
+    ballCameraDirection.set(launchVector.x, launchVector.y, launchVector.z).normalize();
     ball.body.position.set(0, 1.17, 2.9);
     ball.body.previousPosition.copy(ball.body.position);
     ball.body.interpolatedPosition.copy(ball.body.position);
@@ -369,6 +408,7 @@ export function createGarageApp(elements) {
     ball.body.sleepState = CANNON.Body.AWAKE;
     ball.body.wakeUp();
     resetTrail();
+    ballCameraDirection.set(0.1, state.launchElevation, -1).normalize();
     state.playback = 'Idle';
     syncStatus();
   });
@@ -449,6 +489,10 @@ export function createGarageApp(elements) {
 
     if (state.selectedObject) {
       selectionOutline.box.setFromObject(state.selectedObject.group);
+    }
+
+    if (state.cameraMode === 'ball') {
+      updateBallCamera();
     }
 
     sceneSystem.render();

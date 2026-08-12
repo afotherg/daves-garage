@@ -84,6 +84,125 @@ function addTableTennisTable(scene) {
   scene.add(group);
 }
 
+function addGarageDetails(scene) {
+  const halfWidth = garageDimensions.width / 2;
+  const halfDepth = garageDimensions.depth / 2;
+
+  const concreteDark = new THREE.MeshStandardMaterial({
+    color: '#47515b',
+    roughness: 0.96,
+    metalness: 0.01,
+    transparent: true,
+    opacity: 0.38,
+  });
+  const concreteLight = new THREE.MeshStandardMaterial({
+    color: '#9aa3ad',
+    roughness: 0.94,
+    metalness: 0.01,
+    transparent: true,
+    opacity: 0.25,
+  });
+  const rubberMark = new THREE.MeshStandardMaterial({
+    color: '#252b31',
+    roughness: 0.98,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.22,
+  });
+  const trimMaterial = new THREE.MeshStandardMaterial({
+    color: '#8f9aa6',
+    roughness: 0.58,
+    metalness: 0.42,
+  });
+  const lightMaterial = new THREE.MeshStandardMaterial({
+    color: '#f8fbff',
+    emissive: '#dbeafe',
+    emissiveIntensity: 1.8,
+    roughness: 0.28,
+    metalness: 0.02,
+  });
+
+  const slabLines = new THREE.GridHelper(garageDimensions.width, 6, '#6c7680', '#6c7680');
+  slabLines.position.set(0, 0.006, 0);
+  slabLines.material.transparent = true;
+  slabLines.material.opacity = 0.32;
+  scene.add(slabLines);
+
+  const stains = [
+    { size: [1.1, 0.014, 0.56], position: [1.55, 0.01, -1.35], rotation: -0.28, material: concreteDark },
+    { size: [0.78, 0.014, 0.36], position: [-1.8, 0.012, 1.1], rotation: 0.36, material: concreteLight },
+    { size: [1.45, 0.014, 0.16], position: [0.2, 0.014, 2.45], rotation: -0.1, material: rubberMark },
+    { size: [1.05, 0.014, 0.12], position: [0.35, 0.015, 2.72], rotation: 0.08, material: rubberMark },
+  ];
+
+  for (const stain of stains) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...stain.size), stain.material);
+    mesh.position.set(...stain.position);
+    mesh.rotation.y = stain.rotation;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  }
+
+  for (const y of [0.55, 1.05, 1.55, 2.05]) {
+    const seam = new THREE.Mesh(new THREE.BoxGeometry(garageDimensions.width * 0.9, 0.018, 0.018), trimMaterial);
+    seam.position.set(0, y, halfDepth - 0.035);
+    seam.castShadow = true;
+    scene.add(seam);
+  }
+
+  for (const x of [-2.4, -1.2, 0, 1.2, 2.4]) {
+    const seam = new THREE.Mesh(new THREE.BoxGeometry(0.018, 2.15, 0.018), trimMaterial);
+    seam.position.set(x, 1.2, halfDepth - 0.03);
+    seam.castShadow = true;
+    scene.add(seam);
+  }
+
+  const railSpecs = [
+    { position: [-halfWidth + 0.42, 2.42, 0.45], rotation: [Math.PI / 2, 0, 0] },
+    { position: [halfWidth - 0.42, 2.42, 0.45], rotation: [Math.PI / 2, 0, 0] },
+    { position: [0, 2.5, halfDepth - 0.16], rotation: [0, 0, Math.PI / 2] },
+  ];
+
+  for (const rail of railSpecs) {
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, garageDimensions.depth * 0.78, 18), trimMaterial);
+    mesh.position.set(...rail.position);
+    mesh.rotation.set(...rail.rotation);
+    mesh.castShadow = true;
+    scene.add(mesh);
+  }
+
+  for (const z of [-1.65, 1.45]) {
+    const fixture = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.055, 0.16), lightMaterial);
+    fixture.position.set(0, garageDimensions.height - 0.085, z);
+    scene.add(fixture);
+
+    const point = new THREE.PointLight('#eaf4ff', 0.9, 4.8, 1.8);
+    point.position.set(0, garageDimensions.height - 0.2, z);
+    scene.add(point);
+  }
+
+  const pegboardMaterial = new THREE.MeshStandardMaterial({
+    color: '#b9824a',
+    roughness: 0.86,
+    metalness: 0.02,
+  });
+  const pegboard = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.82, 0.035), pegboardMaterial);
+  pegboard.position.set(-1.45, 1.58, -halfDepth + 0.045);
+  pegboard.castShadow = true;
+  pegboard.receiveShadow = true;
+  scene.add(pegboard);
+
+  const hookMaterial = new THREE.MeshStandardMaterial({ color: '#5b6570', roughness: 0.5, metalness: 0.62 });
+  for (const x of [-1.9, -1.65, -1.4, -1.15, -0.9]) {
+    for (const y of [1.35, 1.55, 1.75]) {
+      const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.11, 10), hookMaterial);
+      hook.position.set(x, y, -halfDepth + 0.09);
+      hook.rotation.x = Math.PI / 2;
+      scene.add(hook);
+    }
+  }
+}
+
 export function createSceneSystem(mount) {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -180,6 +299,7 @@ export function createSceneSystem(mount) {
     new THREE.BoxGeometry(garageDimensions.width, wallDepth, garageDimensions.depth),
     wallMaterial,
   );
+  ceiling.name = 'garage-ceiling';
   ceiling.position.set(0, wallHeight, 0);
   ceiling.receiveShadow = true;
   scene.add(ceiling);
@@ -198,13 +318,19 @@ export function createSceneSystem(mount) {
   scene.add(openDoor);
 
   const ceilingGrid = new THREE.GridHelper(garageDimensions.width, 10, '#b9c2cc', '#b9c2cc');
+  ceilingGrid.name = 'garage-ceiling-grid';
   ceilingGrid.position.set(0, garageDimensions.height - 0.02, 0);
   scene.add(ceilingGrid);
 
+  addGarageDetails(scene);
   addTableTennisTable(scene);
 
   function setView(viewId) {
     const view = cameraViews.find((entry) => entry.id === viewId) ?? cameraViews[0];
+    const isOverhead = view.id === 'overhead';
+    ceiling.visible = !isOverhead;
+    ceilingGrid.visible = !isOverhead;
+    orbit.enabled = true;
     camera.position.set(...view.position);
     orbit.target.set(...view.target);
     orbit.update();
@@ -228,7 +354,9 @@ export function createSceneSystem(mount) {
     transformHelper,
     setView,
     render() {
-      orbit.update();
+      if (orbit.enabled) {
+        orbit.update();
+      }
       renderer.render(scene, camera);
     },
   };
