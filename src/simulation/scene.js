@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { cameraViews, garageDimensions } from './catalog.js';
 import { addDaveGarageReplica } from './garageReplica.js';
 
@@ -77,9 +78,30 @@ function addTableTennisTable(scene) {
   net.castShadow = true;
   group.add(net);
 
+  const threadMaterial = new THREE.MeshStandardMaterial({ color: '#d9dde0', roughness: 0.8, metalness: 0.02 });
+  for (let z = -0.72; z <= 0.72; z += 0.09) {
+    const thread = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.128, 0.003), threadMaterial);
+    thread.position.set(0, 0.876, z);
+    group.add(thread);
+  }
+  for (const y of [0.827, 0.858, 0.889, 0.92]) {
+    const thread = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.003, 1.48), threadMaterial);
+    thread.position.set(0, y, 0);
+    group.add(thread);
+  }
+
   const netBand = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.018, 1.525), lineMaterial);
   netBand.position.set(0, 0.944, 0);
   group.add(netBand);
+
+  const wheelMaterial = new THREE.MeshStandardMaterial({ color: '#17191b', roughness: 0.9, metalness: 0.04 });
+  for (const [x, z] of [[-0.95, -0.54], [-0.45, -0.54], [0.45, 0.54], [0.95, 0.54]]) {
+    const caster = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.035, 18), wheelMaterial);
+    caster.position.set(x, 0.055, z);
+    caster.rotation.x = Math.PI / 2;
+    caster.castShadow = true;
+    group.add(caster);
+  }
 
   group.position.set(0, 0, 0);
   group.rotation.y = Math.PI / 2;
@@ -213,14 +235,18 @@ export function createSceneSystem(mount) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 0.82;
   mount.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#d8d9d5');
-  scene.fog = new THREE.Fog('#d8d9d5', 15, 27);
+  scene.background = new THREE.Color('#e0e1dd');
+  scene.fog = new THREE.Fog('#e0e1dd', 16, 29);
+  const environmentGenerator = new THREE.PMREMGenerator(renderer);
+  scene.environment = environmentGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.52;
+  environmentGenerator.dispose();
 
-  const camera = new THREE.PerspectiveCamera(55, mount.clientWidth / mount.clientHeight, 0.01, 50);
+  const camera = new THREE.PerspectiveCamera(58, mount.clientWidth / mount.clientHeight, 0.01, 50);
   const orbit = new OrbitControls(camera, renderer.domElement);
   orbit.enableDamping = true;
   orbit.target.set(0, 1.1, 0);
@@ -238,10 +264,10 @@ export function createSceneSystem(mount) {
   transformHelper.visible = false;
   scene.add(transformHelper);
 
-  const hemi = new THREE.HemisphereLight('#f7fbff', '#85847c', 1.95);
+  const hemi = new THREE.HemisphereLight('#f7fbff', '#85847c', 0.95);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight('#fff9e9', 1.35);
+  const sun = new THREE.DirectionalLight('#fff9e9', 0.92);
   sun.position.set(-1.8, 5.8, 5.4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
@@ -251,6 +277,8 @@ export function createSceneSystem(mount) {
   sun.shadow.camera.right = 8;
   sun.shadow.camera.top = 8;
   sun.shadow.camera.bottom = -8;
+  sun.shadow.radius = 5;
+  sun.shadow.blurSamples = 18;
   scene.add(sun);
 
   const floor = new THREE.Mesh(

@@ -355,9 +355,10 @@ export const garageDimensions = {
 
 export const cameraViews = [
   { id: 'door', label: 'From Garage Door', position: [-0.35, 1.65, 3.22], target: [0, 1.05, -1.35] },
-  { id: 'corner', label: 'Bike & Storage', position: [0.05, 1.62, 0.3], target: [2.48, 1.25, 2.62] },
+  { id: 'corner', label: 'Bikes & Fridges', position: [1.55, 1.62, 1.08], target: [-2.35, 1.18, 1.38] },
+  { id: 'sauna', label: 'Sauna & Utilities', position: [0.35, 1.58, -2.55], target: [-2.3, 1.2, -1.65] },
   { id: 'overhead', label: 'Overhead', position: [0, 8.9, 0.2], target: [0, 0.7, 0] },
-  { id: 'service', label: 'Laundry & Gym', position: [-1.75, 1.45, 0.65], target: [0.45, 1.15, -3.25] },
+  { id: 'service', label: 'Laundry & Gym', position: [2.28, 1.5, 0.72], target: [0.25, 1.08, -3.0] },
   { id: 'ball', label: 'Ball Cam', position: [0, 1.2, 2.8], target: [0, 1.15, 1.8], dynamic: true },
 ];
 

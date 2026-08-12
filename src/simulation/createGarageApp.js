@@ -10,7 +10,7 @@ import {
   objectCatalog,
 } from './catalog.js';
 import { createImpactAudio } from './audio.js';
-import { addGarageShell, createBall, createPhysicsWorld } from './physics.js';
+import { addGarageReplicaColliders, addGarageShell, createBall, createPhysicsWorld } from './physics.js';
 import { createSceneSystem } from './scene.js';
 
 export function createGarageApp(elements) {
@@ -19,6 +19,7 @@ export function createGarageApp(elements) {
   const sceneSystem = createSceneSystem(elements.mount);
   const world = createPhysicsWorld();
   addGarageShell(world);
+  addGarageReplicaColliders(world);
 
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();

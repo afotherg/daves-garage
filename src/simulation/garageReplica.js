@@ -66,6 +66,46 @@ function makeFloorTexture(renderer) {
   return texture;
 }
 
+function makeWoodTexture(renderer) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#a8753f';
+  context.fillRect(0, 0, 512, 512);
+  for (let y = 0; y < 512; y += 7) {
+    const wave = Math.sin(y * 0.071) * 12;
+    context.strokeStyle = `rgba(72,39,18,${0.05 + (y % 21) / 420})`;
+    context.lineWidth = 1 + (y % 3);
+    context.beginPath();
+    context.moveTo(0, y);
+    context.bezierCurveTo(120, y + wave, 350, y - wave * 0.5, 512, y + wave * 0.3);
+    context.stroke();
+  }
+  for (let index = 0; index < 24; index += 1) {
+    context.strokeStyle = 'rgba(65,34,15,0.11)';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.ellipse(
+      40 + ((index * 83) % 430),
+      22 + ((index * 137) % 465),
+      14 + (index % 4) * 5,
+      3 + (index % 3),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    context.stroke();
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 4);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return texture;
+}
+
 function makeSignTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 768;
@@ -168,29 +208,34 @@ function addCeilingLoft(group, dimensions, mats) {
   const halfDepth = dimensions.depth / 2;
   const beamY = dimensions.height - 0.15;
 
-  for (let z = -halfDepth + 0.35; z < halfDepth - 0.2; z += 0.48) {
+  box(overhead, [dimensions.width - 0.14, 0.08, halfDepth + 0.25], mats.ceiling, [0, dimensions.height - 0.035, -halfDepth / 2]);
+
+  for (let z = 0.15; z < halfDepth - 0.2; z += 0.58) {
     box(overhead, [dimensions.width - 0.12, 0.16, 0.1], mats.timber, [0, beamY, z]);
   }
   for (const x of [-halfWidth + 0.12, halfWidth - 0.12]) {
-    box(overhead, [0.12, 0.23, dimensions.depth], mats.darkTimber, [x, beamY - 0.02, 0]);
+    box(overhead, [0.12, 0.23, halfDepth + 0.2], mats.darkTimber, [x, beamY - 0.02, halfDepth / 2]);
   }
 
   const lofts = [
-    { x: -halfWidth * 0.55, z: 1.05, width: halfWidth * 0.82, depth: 2.75 },
-    { x: halfWidth * 0.6, z: -0.15, width: halfWidth * 0.72, depth: 4.2 },
+    { x: -halfWidth * 0.58, z: 1.72, width: halfWidth * 0.82, depth: 3.18 },
+    { x: halfWidth * 0.62, z: 2.05, width: halfWidth * 0.7, depth: 2.45 },
   ];
   for (const loft of lofts) {
     box(overhead, [loft.width, 0.075, loft.depth], mats.plywood, [loft.x, beamY + 0.13, loft.z]);
     for (const x of [loft.x - loft.width / 2, loft.x + loft.width / 2]) {
       box(overhead, [0.08, 0.38, loft.depth], mats.timber, [x, beamY + 0.27, loft.z]);
     }
+    for (let z = loft.z - loft.depth / 2 + 0.15; z < loft.z + loft.depth / 2; z += 0.62) {
+      box(overhead, [loft.width, 0.08, 0.08], mats.timber, [loft.x, beamY + 0.37, z]);
+    }
   }
 
   const stored = [
     [-2.0, 2.98, 1.35, 0.65, 0.36, 0.82, mats.black],
     [-1.15, 2.98, 0.75, 0.52, 0.32, 0.68, mats.binBlue],
-    [1.62, 2.98, -0.8, 0.84, 0.34, 0.55, mats.black],
-    [2.15, 2.98, 0.65, 0.58, 0.3, 0.78, mats.binBlue],
+    [1.62, 2.98, 1.35, 0.84, 0.34, 0.55, mats.black],
+    [2.15, 2.98, 2.18, 0.58, 0.3, 0.78, mats.binBlue],
   ];
   for (const [x, y, z, width, height, depth, storedMaterial] of stored) {
     box(overhead, [width, height, depth], storedMaterial, [x, y, z]);
@@ -217,26 +262,35 @@ function addStairsAndUtilities(group, dimensions, mats) {
   cylinder(group, [0.39, 0.39], 1.72, mats.heater, [heaterX, 0.86, heaterZ], [0, 0, 0], 48);
   cylinder(group, [0.405, 0.405], 0.07, mats.darkMetal, [heaterX, 1.7, heaterZ], [0, 0, 0], 48);
   cylinder(group, [0.12, 0.12], 1.12, mats.duct, [heaterX + 0.08, 2.12, heaterZ]);
-  box(group, [0.56, 0.58, 0.012], material('#f3f1e9', 0.8, 0.01, { map: makeLabelTexture('WATER HEATER') }), [heaterX, 0.94, heaterZ + 0.396], [0, 0, 0]);
+  box(group, [0.012, 0.58, 0.56], material('#f3f1e9', 0.8, 0.01, { map: makeLabelTexture('WATER HEATER') }), [heaterX + 0.396, 0.94, heaterZ], [0, Math.PI / 2, 0]);
   cylinder(group, [0.018, 0.018], 1.28, mats.gas, [heaterX, 0.44, heaterZ + 0.41], [0, 0, Math.PI / 2], 12);
 
   const furnaceX = wallX + 0.25;
   const furnaceZ = -1.35;
   box(group, [0.82, 1.52, 0.72], mats.furnace, [furnaceX, 0.76, furnaceZ]);
   for (let y = 0.18; y < 0.58; y += 0.085) {
-    box(group, [0.48, 0.026, 0.02], mats.darkMetal, [furnaceX + 0.41, y, furnaceZ]);
+    box(group, [0.018, 0.026, 0.48], mats.darkMetal, [furnaceX + 0.42, y, furnaceZ]);
   }
-  box(group, [0.58, 0.52, 0.012], material('#efeee8', 0.85, 0.01, { map: makeLabelTexture('HVAC SYSTEM', '#e3a627') }), [furnaceX + 0.416, 0.94, furnaceZ]);
+  box(group, [0.012, 0.52, 0.58], material('#efeee8', 0.85, 0.01, { map: makeLabelTexture('HVAC SYSTEM', '#e3a627') }), [furnaceX + 0.416, 0.94, furnaceZ], [0, Math.PI / 2, 0]);
   box(group, [0.9, 0.52, 0.78], mats.duct, [furnaceX, 1.78, furnaceZ]);
   cylinder(group, [0.24, 0.24], 2.8, mats.duct, [furnaceX + 0.2, 2.27, 0.22], [Math.PI / 2, 0, 0], 28);
   cylinder(group, [0.16, 0.16], 2.1, mats.duct, [furnaceX + 1.0, 2.32, -1.25], [0, 0, Math.PI / 2], 28);
+  for (let z = -0.95; z <= 1.35; z += 0.38) {
+    addMesh(group, new THREE.TorusGeometry(0.242, 0.012, 8, 28), mats.ductBand, [furnaceX + 0.2, 2.27, z]);
+  }
+  for (let x = furnaceX + 0.15; x <= furnaceX + 1.85; x += 0.34) {
+    addMesh(group, new THREE.TorusGeometry(0.162, 0.01, 8, 24), mats.ductBand, [x, 2.32, -1.25], [0, Math.PI / 2, 0]);
+  }
+  box(group, [0.08, 0.26, 0.34], mats.controller, [wallX + 0.04, 2.03, -2.0]);
+  box(group, [0.015, 0.08, 0.12], mats.controllerScreen, [wallX + 0.085, 2.05, -2.0], [0, Math.PI / 2, 0]);
 
-  const ladderX = wallX + 0.92;
+  const ladderX = -1.42;
+  const ladderZ = -halfDepth + 0.42;
   for (const offset of [-0.16, 0.16]) {
-    box(group, [0.06, 2.35, 0.06], mats.aluminum, [ladderX + offset, 1.18, -1.52]);
+    box(group, [0.06, 2.35, 0.06], mats.aluminum, [ladderX + offset, 1.18, ladderZ]);
   }
   for (let y = 0.25; y < 2.25; y += 0.31) {
-    box(group, [0.4, 0.045, 0.07], mats.aluminum, [ladderX, y, -1.52]);
+    box(group, [0.4, 0.045, 0.07], mats.aluminum, [ladderX, y, ladderZ]);
   }
 }
 
@@ -267,8 +321,78 @@ function addLaundry(group, dimensions, mats) {
   stripes.forEach((color, index) => {
     box(group, [0.22, 0.024, 0.72], material(color, 0.98), [-0.82 + index * 0.36, 0.03, -halfDepth + 1.28]);
   });
+  box(group, [0.82, 1.94, 0.035], mats.door, [1.55, 0.98, -halfDepth + 0.035]);
+  box(group, [0.055, 2.05, 0.055], mats.doorTrim, [1.11, 1.03, -halfDepth + 0.02]);
+  box(group, [0.055, 2.05, 0.055], mats.doorTrim, [1.99, 1.03, -halfDepth + 0.02]);
+  cylinder(group, [0.032, 0.032], 0.045, mats.darkMetal, [1.85, 0.98, -halfDepth + 0.075], [Math.PI / 2, 0, 0], 20);
   const signMaterial = material('#ffffff', 0.8, 0.01, { map: makeSignTexture() });
-  box(group, [1.15, 0.78, 0.035], signMaterial, [0.6, 2.15, -halfDepth + 0.055]);
+  box(group, [0.92, 0.64, 0.035], signMaterial, [1.48, 2.47, -halfDepth + 0.055]);
+
+  // Small details visible around the real laundry pair.
+  box(group, [0.34, 0.42, 0.3], mats.redPlastic, [0.72, 0.21, -halfDepth + 0.52]);
+  box(group, [0.38, 0.62, 0.32], mats.whitePlastic, [1.53, 0.31, -halfDepth + 0.72]);
+  cylinder(group, [0.045, 0.045], 0.3, mats.bottleYellow, [-0.83, 1.21, -halfDepth + 0.49], [0, 0, 0], 18);
+  cylinder(group, [0.04, 0.04], 0.28, mats.bottleGreen, [-0.55, 1.2, -halfDepth + 0.49], [0, 0, 0], 18);
+}
+
+function addSauna(group, dimensions, mats) {
+  const halfWidth = dimensions.width / 2;
+  const sauna = new THREE.Group();
+  const depth = 0.82;
+  const width = 1.28;
+  const height = 2.02;
+
+  // The cabin sits against the left wall and opens toward the center aisle.
+  box(sauna, [depth, height, width], mats.cedar, [0, height / 2, 0]);
+  box(sauna, [0.035, 1.7, 0.76], mats.saunaGlass, [depth / 2 + 0.022, 1.02, 0]);
+  box(sauna, [0.07, 1.9, 0.12], mats.cedarTrim, [depth / 2 + 0.05, 1.02, -width / 2 + 0.09]);
+  box(sauna, [0.07, 1.9, 0.12], mats.cedarTrim, [depth / 2 + 0.05, 1.02, width / 2 - 0.09]);
+  box(sauna, [0.07, 0.12, width - 0.12], mats.cedarTrim, [depth / 2 + 0.05, 1.94, 0]);
+  box(sauna, [0.07, 0.12, width - 0.12], mats.cedarTrim, [depth / 2 + 0.05, 0.1, 0]);
+  box(sauna, [0.05, 0.56, 0.055], mats.handle, [depth / 2 + 0.1, 1.07, -0.38]);
+
+  // Interior cedar bench and vertical heater slats remain visible through the smoked glass.
+  box(sauna, [0.47, 0.08, width - 0.28], mats.cedarLight, [0.04, 0.48, 0]);
+  for (let z = -0.48; z <= 0.48; z += 0.11) {
+    box(sauna, [0.46, 0.045, 0.045], mats.cedarLight, [0.06, 0.72, z]);
+  }
+  for (let z = -0.42; z <= 0.42; z += 0.105) {
+    box(sauna, [0.08, 0.72, 0.045], mats.saunaSlat, [0.28, 0.48, z]);
+  }
+  box(sauna, [0.02, 0.16, 0.22], mats.warning, [depth / 2 + 0.072, 1.53, -0.43]);
+  const glow = new THREE.PointLight('#ffba70', 1.1, 1.7, 2.1);
+  glow.position.set(0.12, 1.48, 0);
+  sauna.add(glow);
+
+  sauna.position.set(-halfWidth + depth / 2 + 0.08, 0, -1.45);
+  group.add(sauna);
+
+  box(group, [1.05, 0.025, 0.72], mats.brownMat, [-halfWidth + 0.92, 0.018, -1.46]);
+  cylinder(group, [0.018, 0.018], 2.16, mats.broomGreen, [-halfWidth + 0.64, 1.08, -0.78], [0, 0, 0], 12);
+  cylinder(group, [0.016, 0.016], 2.06, mats.broomWhite, [-halfWidth + 0.7, 1.03, -0.7], [0, 0, 0], 12);
+  box(group, [0.04, 0.15, 0.19], mats.black, [-halfWidth + 0.05, 1.48, -2.78]);
+  box(group, [0.3, 0.07, 0.64], mats.redTowel, [-halfWidth + 0.62, 2.68, -2.85], [0.05, 0, 0]);
+}
+
+function addSideWindowAndCables(group, dimensions, mats) {
+  const halfWidth = dimensions.width / 2;
+  const x = halfWidth - 0.046;
+  const z = -1.65;
+  box(group, [0.025, 1.08, 1.34], mats.window, [x, 1.62, z]);
+  box(group, [0.06, 0.08, 1.46], mats.windowTrim, [x - 0.02, 1.06, z]);
+  box(group, [0.06, 0.08, 1.46], mats.windowTrim, [x - 0.02, 2.18, z]);
+  box(group, [0.06, 1.2, 0.08], mats.windowTrim, [x - 0.02, 1.62, z - 0.71]);
+  box(group, [0.06, 1.2, 0.08], mats.windowTrim, [x - 0.02, 1.62, z + 0.71]);
+
+  box(group, [0.055, 0.18, 0.33], mats.black, [x - 0.06, 1.42, -0.83]);
+  const cablePoints = [
+    [x - 0.09, 1.34, -0.83],
+    [x - 0.1, 0.95, -0.81],
+    [x - 0.12, 0.58, -0.69],
+  ];
+  for (let index = 1; index < cablePoints.length; index += 1) {
+    beamBetween(group, cablePoints[index - 1], cablePoints[index], 0.012, mats.cable, 10);
+  }
 }
 
 function addTreadmill(group, dimensions, mats) {
@@ -303,6 +427,10 @@ function addPowerRack(group, dimensions, mats) {
   box(rack, [0.08, 0.08, 1.18], mats.rack, [-0.7, 2.15, 0]);
   box(rack, [0.08, 0.08, 1.18], mats.rack, [0.7, 2.15, 0]);
   cylinder(rack, [0.024, 0.024], 1.42, mats.rack, [0, 2.16, -0.55], [0, 0, Math.PI / 2], 18);
+  // Green resistance band looped over the pull-up bar in the footage.
+  beamBetween(rack, [-0.34, 2.13, -0.55], [-0.34, 1.08, -0.55], 0.018, mats.bandGreen, 12);
+  beamBetween(rack, [-0.29, 2.13, -0.55], [-0.29, 1.08, -0.55], 0.018, mats.bandGreen, 12);
+  addMesh(rack, new THREE.TorusGeometry(0.027, 0.016, 10, 22, Math.PI), mats.bandGreen, [-0.315, 1.08, -0.55], [0, Math.PI / 2, 0]);
   rack.position.set(1.28, 0, -halfDepth + 1.58);
   group.add(rack);
 
@@ -315,6 +443,11 @@ function addPowerRack(group, dimensions, mats) {
     for (const x of [2.13, 2.63]) {
       box(group, [0.17, 0.14, 0.16], mats.dumbbell, [x, 0.18 + row * 0.075, z], [0, row * 0.12, 0]);
     }
+  }
+
+  // Loose shoes and soft gear on the shelving side of the rack.
+  for (const [x, z, color] of [[2.45, -0.08, mats.shoeWhite], [2.58, 0.12, mats.shoeBlack], [2.33, 0.28, mats.shoeWhite]]) {
+    box(group, [0.24, 0.09, 0.11], color, [x, 0.12, z], [0, 0.18, 0]);
   }
 }
 
@@ -336,7 +469,11 @@ function addShelf(parent, x, z, rotationY, mats) {
     const binMaterial = index % 3 === 1 ? mats.clearBin : mats.binBlue;
     box(shelf, [width, 0.38, 0.43], binMaterial, [bx, by, bz]);
     box(shelf, [width + 0.035, 0.035, 0.46], mats.binLid, [bx, by + 0.21, bz]);
+    box(shelf, [0.18, 0.075, 0.012], mats.binLabel, [bx, by + 0.02, 0.222]);
   });
+  box(shelf, [0.32, 0.18, 0.34], mats.limeBin, [0.28, 1.9, 0]);
+  box(shelf, [0.26, 0.13, 0.32], mats.shoeWhite, [-0.4, 1.9, 0], [0, 0.18, 0]);
+  box(shelf, [0.28, 0.14, 0.34], mats.shoeBlack, [-0.08, 1.9, 0], [0, -0.16, 0]);
   shelf.position.set(x, 0, z);
   shelf.rotation.y = rotationY;
   parent.add(shelf);
@@ -345,9 +482,10 @@ function addShelf(parent, x, z, rotationY, mats) {
 function addFridge(parent, x, z, rotationY, mats) {
   const fridge = new THREE.Group();
   box(fridge, [0.82, 1.82, 0.72], mats.fridge, [0, 0.91, 0]);
-  box(fridge, [0.75, 0.025, 0.055], mats.seam, [0, 0.83, 0.375]);
-  box(fridge, [0.035, 0.46, 0.035], mats.handle, [0.32, 1.25, 0.39]);
-  box(fridge, [0.035, 0.28, 0.035], mats.handle, [0.32, 0.58, 0.39]);
+  box(fridge, [0.75, 0.022, 0.055], mats.seam, [0, 1.12, 0.375]);
+  box(fridge, [0.035, 0.38, 0.035], mats.handle, [0.32, 1.43, 0.39]);
+  box(fridge, [0.035, 0.36, 0.035], mats.handle, [0.32, 0.78, 0.39]);
+  box(fridge, [0.54, 0.24, 0.42], mats.black, [-0.04, 1.94, -0.02], [0, 0.12, 0]);
   fridge.position.set(x, 0, z);
   fridge.rotation.y = rotationY;
   parent.add(fridge);
@@ -384,22 +522,26 @@ function addBike(parent, x, y, z, scale, rotationY, mats) {
 function addStorageWall(group, dimensions, mats) {
   const halfWidth = dimensions.width / 2;
   const halfDepth = dimensions.depth / 2;
-  addShelf(group, halfWidth - 0.38, -1.0, -Math.PI / 2, mats);
-  addShelf(group, halfWidth - 0.38, 0.35, -Math.PI / 2, mats);
-  addFridge(group, halfWidth - 0.48, 1.42, -Math.PI / 2, mats);
-  addFridge(group, halfWidth - 0.48, 2.14, -Math.PI / 2, mats);
+  // Shelving is on the right side near the sectional door.
+  addShelf(group, halfWidth - 0.38, 1.7, -Math.PI / 2, mats);
 
-  addBike(group, halfWidth - 0.46, 0.38, 2.82, 0.9, 0, mats);
-  addBike(group, halfWidth - 0.48, 1.02, 2.86, 0.86, 0.02, { ...mats, bikeFrame: mats.bikeFrameAlt });
-  addBike(group, halfWidth - 0.5, 1.58, 2.88, 0.8, -0.03, mats);
+  // The two white refrigerators sit on the opposite wall between sauna and bikes.
+  addFridge(group, -halfWidth + 0.48, -0.38, Math.PI / 2, mats);
+  addFridge(group, -halfWidth + 0.48, 0.46, Math.PI / 2, mats);
 
-  box(group, [0.8, 0.74, 0.76], mats.cardboard, [halfWidth - 1.14, 0.37, halfDepth - 0.88]);
-  box(group, [0.52, 0.4, 0.48], mats.cardboardLight, [halfWidth - 1.1, 0.94, halfDepth - 0.9]);
-  box(group, [0.13, 0.755, 0.78], mats.tape, [halfWidth - 1.14, 0.76, halfDepth - 0.88]);
+  addBike(group, -halfWidth + 0.46, 0.34, 2.55, 0.9, 0, mats);
+  addBike(group, -halfWidth + 0.48, 0.94, 2.58, 0.86, 0.02, { ...mats, bikeFrame: mats.bikeFrameAlt });
+  addBike(group, -halfWidth + 0.5, 1.48, 2.6, 0.8, -0.03, mats);
+
+  box(group, [0.8, 0.74, 0.76], mats.cardboard, [-halfWidth + 1.16, 0.37, halfDepth - 0.82]);
+  box(group, [0.52, 0.4, 0.48], mats.cardboardLight, [-halfWidth + 1.12, 0.94, halfDepth - 0.84]);
+  box(group, [0.13, 0.755, 0.78], mats.tape, [-halfWidth + 1.16, 0.76, halfDepth - 0.82]);
+  box(group, [1.18, 0.025, 0.58], mats.rug, [-halfWidth + 0.82, 0.018, 2.52]);
 }
 
 function addWallHooks(group, dimensions, mats) {
   const halfWidth = dimensions.width / 2;
+  const halfDepth = dimensions.depth / 2;
   for (const x of [-2.25, -1.35, -0.45, 0.45, 1.35, 2.25]) {
     const hook = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.014, 10, 24, Math.PI * 1.25), mats.hook);
     hook.position.set(x, 2.43, -dimensions.depth / 2 + 0.08);
@@ -407,13 +549,24 @@ function addWallHooks(group, dimensions, mats) {
     group.add(hook);
   }
   box(group, [0.06, 0.7, 0.06], mats.hook, [halfWidth - 0.07, 1.42, -2.65]);
+
+  // Gray curb/base strip and visible electrical plates ground the walls like the footage.
+  box(group, [0.07, 0.24, dimensions.depth - 0.18], mats.baseboard, [-halfWidth + 0.025, 0.12, 0]);
+  box(group, [0.07, 0.24, dimensions.depth - 0.18], mats.baseboard, [halfWidth - 0.025, 0.12, 0]);
+  for (const [x, z, rotation] of [[-halfWidth + 0.06, 0.8, Math.PI / 2], [halfWidth - 0.06, -0.7, -Math.PI / 2]]) {
+    box(group, [0.015, 0.17, 0.1], mats.outlet, [x, 0.64, z], [0, rotation, 0]);
+  }
+
+  // Slab expansion joints visible from the door sweep.
+  box(group, [dimensions.width - 0.08, 0.008, 0.018], mats.floorJoint, [0, 0.014, 1.16]);
+  box(group, [0.018, 0.008, dimensions.depth - 0.08], mats.floorJoint, [0.28, 0.014, 0]);
 }
 
 function addFluorescentLighting(group, mats) {
   for (const z of [-1.45, 1.25]) {
     box(group, [1.55, 0.055, 0.2], mats.lightHousing, [-0.45, 2.69, z]);
     box(group, [1.43, 0.035, 0.12], mats.lightTube, [-0.45, 2.655, z]);
-    const light = new THREE.RectAreaLight('#fffdf0', 5.2, 1.45, 0.55);
+    const light = new THREE.RectAreaLight('#fffdf0', 3.1, 1.45, 0.55);
     light.position.set(-0.45, 2.62, z);
     light.lookAt(-0.45, 0, z);
     group.add(light);
@@ -421,12 +574,14 @@ function addFluorescentLighting(group, mats) {
 }
 
 export function addDaveGarageReplica(scene, dimensions, renderer) {
+  const woodTexture = makeWoodTexture(renderer);
   const mats = {
     wall: material('#ecece8', 0.93),
+    ceiling: material('#e9e9e4', 0.92),
     door: material('#e7e8e3', 0.86, 0.04),
     doorTrim: material('#d2d5d3', 0.72, 0.18),
     seam: material('#a7aaa7', 0.8, 0.15),
-    window: material('#f2ffff', 0.18, 0.02, { emissive: '#d8f3ff', emissiveIntensity: 2.8 }),
+    window: material('#f2ffff', 0.18, 0.02, { emissive: '#d8f3ff', emissiveIntensity: 1.4 }),
     metal: material('#9ea3a4', 0.42, 0.72),
     darkMetal: material('#616667', 0.52, 0.68),
     track: material('#8e9394', 0.45, 0.76),
@@ -435,28 +590,52 @@ export function addDaveGarageReplica(scene, dimensions, renderer) {
     timber: material('#b88752', 0.86, 0.01),
     darkTimber: material('#7a542e', 0.9, 0.01),
     plywood: material('#a97945', 0.93, 0.01),
+    cedar: material('#a8743f', 0.8, 0.02, { map: woodTexture }),
+    cedarTrim: material('#b9854d', 0.7, 0.03, { map: woodTexture }),
+    cedarLight: material('#c28e55', 0.78, 0.02, { map: woodTexture }),
+    saunaSlat: material('#7f522b', 0.82, 0.02),
+    saunaGlass: new THREE.MeshPhysicalMaterial({
+      color: '#4b3528',
+      roughness: 0.14,
+      metalness: 0.02,
+      transmission: 0.28,
+      thickness: 0.045,
+      transparent: true,
+      opacity: 0.72,
+    }),
+    warning: material('#f0ead9', 0.76, 0.01),
     black: material('#151719', 0.9, 0.05),
     concrete: material('#8d918e', 0.96, 0.01),
     runner: material('#9b927b', 0.98),
     heater: material('#777c7e', 0.55, 0.5),
     duct: material('#b7bbba', 0.38, 0.72),
+    ductBand: material('#d2d4d2', 0.24, 0.88),
     gas: material('#d9b523', 0.55, 0.3),
     furnace: material('#565b5d', 0.6, 0.55),
+    controller: material('#e6e7e2', 0.7, 0.12),
+    controllerScreen: material('#667680', 0.28, 0.24, { emissive: '#6f99a5', emissiveIntensity: 0.28 }),
     aluminum: material('#c7cbca', 0.3, 0.84),
-    stainless: material('#aeb2b0', 0.26, 0.82),
-    panel: material('#34383a', 0.4, 0.54),
+    stainless: material('#c4c8c6', 0.24, 0.76),
+    panel: material('#555b5d', 0.32, 0.58),
     chrome: material('#d4d8d6', 0.18, 0.95),
     glass: material('#172126', 0.08, 0.2, { transparent: true, opacity: 0.74 }),
     bottle: material('#f2f1e7', 0.8, 0.02),
+    bottleYellow: material('#f0cb31', 0.72, 0.03),
+    bottleGreen: material('#c7db55', 0.72, 0.03),
+    redPlastic: material('#8f1d1d', 0.86, 0.03),
+    whitePlastic: material('#e8e9e5', 0.86, 0.02),
     rug: material('#8c806d', 1),
     belt: material('#272a2b', 0.92, 0.04),
     screen: material('#a7c6bb', 0.24, 0.18, { emissive: '#618b83', emissiveIntensity: 0.22 }),
     rack: material('#242729', 0.55, 0.72),
+    bandGreen: material('#73b54b', 0.84, 0.02),
     hole: material('#090a0b', 0.9),
     gymMat: material('#2c2e2e', 0.98),
     dumbbell: material('#202223', 0.94, 0.04),
     binBlue: material('#40547e', 0.82, 0.04),
     binLid: material('#233047', 0.8, 0.04),
+    binLabel: material('#e6e2d5', 0.82, 0.01),
+    limeBin: material('#a9bd59', 0.83, 0.03),
     clearBin: material('#b4b7ad', 0.5, 0.04, { transparent: true, opacity: 0.62 }),
     fridge: material('#e4e4df', 0.72, 0.12),
     handle: material('#c9cbca', 0.34, 0.76),
@@ -468,8 +647,19 @@ export function addDaveGarageReplica(scene, dimensions, renderer) {
     cardboardLight: material('#bd9563', 0.94),
     tape: material('#d8c29b', 0.8),
     hook: material('#242728', 0.46, 0.76),
+    brownMat: material('#625346', 0.99, 0.01),
+    broomGreen: material('#3d945e', 0.82, 0.04),
+    broomWhite: material('#e2e1da', 0.74, 0.06),
+    redTowel: material('#7b2730', 1, 0),
+    windowTrim: material('#deded9', 0.82, 0.08),
+    cable: material('#282b2c', 0.78, 0.2),
+    shoeWhite: material('#deded8', 0.9, 0.02),
+    shoeBlack: material('#242527', 0.94, 0.02),
+    baseboard: material('#737877', 0.9, 0.06),
+    outlet: material('#d9d8d1', 0.76, 0.04),
+    floorJoint: material('#6e726f', 0.96, 0.01),
     lightHousing: material('#e9e8e0', 0.72, 0.14),
-    lightTube: material('#fffdf1', 0.18, 0.02, { emissive: '#fff8dc', emissiveIntensity: 4.2 }),
+    lightTube: material('#fffdf1', 0.18, 0.02, { emissive: '#fff8dc', emissiveIntensity: 2.4 }),
   };
 
   const group = new THREE.Group();
@@ -478,6 +668,8 @@ export function addDaveGarageReplica(scene, dimensions, renderer) {
   addCeilingLoft(group, dimensions, mats);
   addStairsAndUtilities(group, dimensions, mats);
   addLaundry(group, dimensions, mats);
+  addSauna(group, dimensions, mats);
+  addSideWindowAndCables(group, dimensions, mats);
   addTreadmill(group, dimensions, mats);
   addPowerRack(group, dimensions, mats);
   addStorageWall(group, dimensions, mats);
