@@ -66,38 +66,38 @@ export function addGarageShell(world) {
   const tableParts = [
     {
       name: 'table-top',
-      size: [2.74, 0.04, 1.525],
+      size: [1.525, 0.04, 2.74],
       position: [0, 0.78, 0],
       acousticProfile: { baseFrequency: 640, decay: 0.11, noise: 0.08 },
     },
     {
       name: 'table-net',
-      size: [0.02, 0.1525, 1.525],
+      size: [1.525, 0.1525, 0.02],
       position: [0, 0.87625, 0],
       acousticProfile: { baseFrequency: 520, decay: 0.08, noise: 0.04 },
     },
     {
       name: 'table-leg',
       size: [0.06, 0.72, 0.06],
-      position: [-0.95, 0.38, -0.54],
+      position: [-0.54, 0.38, 0.95],
       acousticProfile: { baseFrequency: 430, decay: 0.14, noise: 0.09 },
     },
     {
       name: 'table-leg',
       size: [0.06, 0.72, 0.06],
-      position: [-0.45, 0.38, -0.54],
+      position: [-0.54, 0.38, 0.45],
       acousticProfile: { baseFrequency: 430, decay: 0.14, noise: 0.09 },
     },
     {
       name: 'table-leg',
       size: [0.06, 0.72, 0.06],
-      position: [0.45, 0.38, 0.54],
+      position: [0.54, 0.38, -0.45],
       acousticProfile: { baseFrequency: 430, decay: 0.14, noise: 0.09 },
     },
     {
       name: 'table-leg',
       size: [0.06, 0.72, 0.06],
-      position: [0.95, 0.38, 0.54],
+      position: [0.54, 0.38, -0.95],
       acousticProfile: { baseFrequency: 430, decay: 0.14, noise: 0.09 },
     },
   ];
@@ -123,6 +123,7 @@ export function createBall(world) {
   const radius = 0.02;
   const ballBody = new CANNON.Body({
     mass: 0.0027,
+    type: CANNON.Body.KINEMATIC,
     position: new CANNON.Vec3(0, 1.2, 2.8),
     shape: new CANNON.Sphere(radius),
     linearDamping: 0.12,

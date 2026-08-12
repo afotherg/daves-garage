@@ -380,6 +380,9 @@ export function createGarageApp(elements) {
   elements.launchButton.addEventListener('click', () => {
     const launchVector = new CANNON.Vec3(0.1, state.launchElevation, -1).unit();
     ballCameraDirection.set(launchVector.x, launchVector.y, launchVector.z).normalize();
+    ball.body.type = CANNON.Body.DYNAMIC;
+    ball.body.mass = 0.0027;
+    ball.body.updateMassProperties();
     ball.body.position.set(0, 1.17, 2.9);
     ball.body.previousPosition.copy(ball.body.position);
     ball.body.interpolatedPosition.copy(ball.body.position);
@@ -398,6 +401,7 @@ export function createGarageApp(elements) {
   });
 
   elements.resetButton.addEventListener('click', () => {
+    ball.body.type = CANNON.Body.KINEMATIC;
     ball.body.position.set(0, 1.2, 2.8);
     ball.body.previousPosition.copy(ball.body.position);
     ball.body.interpolatedPosition.copy(ball.body.position);
@@ -467,9 +471,9 @@ export function createGarageApp(elements) {
     });
   });
 
-  for (const preset of objectCatalog) {
-    addObject(preset);
-  }
+  // The reference garage is modeled as fixed architectural detail. The object
+  // library remains available for optional ricochet experiments without
+  // cluttering the faithful default layout with unrelated presets.
 
   syncStatus();
 
@@ -483,7 +487,7 @@ export function createGarageApp(elements) {
 
     updateTrail();
 
-    if (ball.body.velocity.length() < 0.1 && ball.body.position.y < 0.05) {
+    if (state.playback === 'Ball in flight' && ball.body.velocity.length() < 0.1 && ball.body.position.y < 0.05) {
       state.playback = 'Ball settled';
     }
 

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { cameraViews, garageDimensions } from './catalog.js';
+import { addDaveGarageReplica } from './garageReplica.js';
 
 function addTableTennisTable(scene) {
   const group = new THREE.Group();
@@ -81,6 +82,7 @@ function addTableTennisTable(scene) {
   group.add(netBand);
 
   group.position.set(0, 0, 0);
+  group.rotation.y = Math.PI / 2;
   scene.add(group);
 }
 
@@ -204,17 +206,19 @@ function addGarageDetails(scene) {
 }
 
 export function createSceneSystem(mount) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
   renderer.setSize(mount.clientWidth, mount.clientHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.08;
   mount.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#0e1726');
-  scene.fog = new THREE.Fog('#0e1726', 10, 20);
+  scene.background = new THREE.Color('#d8d9d5');
+  scene.fog = new THREE.Fog('#d8d9d5', 15, 27);
 
   const camera = new THREE.PerspectiveCamera(55, mount.clientWidth / mount.clientHeight, 0.01, 50);
   const orbit = new OrbitControls(camera, renderer.domElement);
@@ -234,13 +238,13 @@ export function createSceneSystem(mount) {
   transformHelper.visible = false;
   scene.add(transformHelper);
 
-  const hemi = new THREE.HemisphereLight('#eef6ff', '#334155', 1.4);
+  const hemi = new THREE.HemisphereLight('#f7fbff', '#85847c', 1.95);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight('#fff4d6', 1.8);
-  sun.position.set(4.5, 6.2, 3.8);
+  const sun = new THREE.DirectionalLight('#fff9e9', 1.35);
+  sun.position.set(-1.8, 5.8, 5.4);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.camera.near = 0.5;
   sun.shadow.camera.far = 20;
   sun.shadow.camera.left = -8;
@@ -252,7 +256,7 @@ export function createSceneSystem(mount) {
   const floor = new THREE.Mesh(
     new THREE.BoxGeometry(garageDimensions.width, 0.12, garageDimensions.depth),
     new THREE.MeshStandardMaterial({
-      color: '#73808c',
+      color: '#9b9e9a',
       roughness: 0.92,
       metalness: 0.02,
     }),
@@ -262,7 +266,7 @@ export function createSceneSystem(mount) {
   scene.add(floor);
 
   const wallMaterial = new THREE.MeshStandardMaterial({
-    color: '#d7dde2',
+    color: '#ecece8',
     roughness: 0.94,
     metalness: 0.01,
   });
@@ -295,41 +299,25 @@ export function createSceneSystem(mount) {
   rightWall.receiveShadow = true;
   scene.add(rightWall);
 
-  const ceiling = new THREE.Mesh(
-    new THREE.BoxGeometry(garageDimensions.width, wallDepth, garageDimensions.depth),
-    wallMaterial,
-  );
+  const ceiling = new THREE.Group();
   ceiling.name = 'garage-ceiling';
-  ceiling.position.set(0, wallHeight, 0);
-  ceiling.receiveShadow = true;
   scene.add(ceiling);
-
-  const openDoor = new THREE.Mesh(
-    new THREE.BoxGeometry(garageDimensions.width * 0.94, 0.16, 0.3),
-    new THREE.MeshStandardMaterial({
-      color: '#c5ced7',
-      roughness: 0.85,
-      metalness: 0.08,
-    }),
-  );
-  openDoor.position.set(0, garageDimensions.height - 0.12, halfDepth - 0.08);
-  openDoor.castShadow = true;
-  openDoor.receiveShadow = true;
-  scene.add(openDoor);
-
-  const ceilingGrid = new THREE.GridHelper(garageDimensions.width, 10, '#b9c2cc', '#b9c2cc');
+  const ceilingGrid = new THREE.Group();
   ceilingGrid.name = 'garage-ceiling-grid';
-  ceilingGrid.position.set(0, garageDimensions.height - 0.02, 0);
   scene.add(ceilingGrid);
 
-  addGarageDetails(scene);
+  addDaveGarageReplica(scene, garageDimensions, renderer);
   addTableTennisTable(scene);
 
   function setView(viewId) {
     const view = cameraViews.find((entry) => entry.id === viewId) ?? cameraViews[0];
     const isOverhead = view.id === 'overhead';
+    const overheadStructure = scene.getObjectByName('garage-overhead');
     ceiling.visible = !isOverhead;
     ceilingGrid.visible = !isOverhead;
+    if (overheadStructure) {
+      overheadStructure.visible = !isOverhead;
+    }
     orbit.enabled = true;
     camera.position.set(...view.position);
     orbit.target.set(...view.target);

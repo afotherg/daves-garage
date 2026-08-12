@@ -8,8 +8,8 @@ document.querySelector('#app').innerHTML = `
         <p class="eyebrow">Dave's Garage</p>
         <h1>Garage simulator</h1>
         <p class="lede">
-          Explore Dave's garage with movable obstacles, adjustable viewpoints, and
-          physically simulated table tennis ball ricochets.
+          A high-resolution interactive recreation matched to Dave's real garage,
+          with movable obstacles and physically simulated table tennis ricochets.
         </p>
       </div>
 
@@ -57,7 +57,7 @@ document.querySelector('#app').innerHTML = `
           <strong id="ball-state">Idle</strong>
         </div>
         <div class="hud__card">
-          <span class="hud__label">Objects</span>
+          <span class="hud__label">Movable Objects</span>
           <strong id="object-count">0</strong>
         </div>
       </div>

@@ -348,16 +348,16 @@ function buildPaintCansVisual() {
 }
 
 export const garageDimensions = {
-  width: 6.6,
-  depth: 7.4,
-  height: 2.7,
+  width: 5.8,
+  depth: 7.8,
+  height: 3.05,
 };
 
 export const cameraViews = [
-  { id: 'door', label: 'Garage Door', position: [0, 1.7, 4.9], target: [0, 1.0, -0.7] },
-  { id: 'corner', label: 'Corner Sweep', position: [-6.1, 3.2, 4.8], target: [0.3, 1.2, -1.2] },
-  { id: 'overhead', label: 'Overhead', position: [0, 8.8, 0.1], target: [0, 0.8, 0] },
-  { id: 'service', label: 'Service Line', position: [2.4, 1.4, 2.2], target: [-0.6, 1.0, -1.5] },
+  { id: 'door', label: 'From Garage Door', position: [-0.35, 1.65, 3.22], target: [0, 1.05, -1.35] },
+  { id: 'corner', label: 'Bike & Storage', position: [0.05, 1.62, 0.3], target: [2.48, 1.25, 2.62] },
+  { id: 'overhead', label: 'Overhead', position: [0, 8.9, 0.2], target: [0, 0.7, 0] },
+  { id: 'service', label: 'Laundry & Gym', position: [-1.75, 1.45, 0.65], target: [0.45, 1.15, -3.25] },
   { id: 'ball', label: 'Ball Cam', position: [0, 1.2, 2.8], target: [0, 1.15, 1.8], dynamic: true },
 ];
 
